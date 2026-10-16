@@ -1,0 +1,858 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>High-Wage CRS Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: mobile-app look from the user's CRS calculator screenshots. Crimson app bar with tabs,
+   light grey canvas, white rounded cards, pill chips (filled crimson when selected), score bubbles. Light theme only. */
+:root{
+  color-scheme: light;
+  --red:#B71C1C; --red-dark:#911515; --red-soft:#FBEAEA; --red-ring:#F1C3C3;
+  --bg:#F3F4F7; --card:#FFFFFF; --field:#F1F2F6; --ink:#1E2A32; --muted:#5E6A74; --line:#E4E6EC;
+  --l1:#0E7C66; --l1-soft:#DDF3EE; --l2:#2453C2; --l2-soft:#E3EAFB; --l3:#9A5800; --l3-soft:#F8EDDB; --l0:#5E6A74; --l0-soft:#ECEEF2;
+  --good:#167A4A; --warn:#A06000;
+  --shadow:0 6px 20px rgba(32,40,58,.08); --shadow-sm:0 2px 8px rgba(32,40,58,.08);
+  --f:"Work Sans", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --r:24px;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.55;padding-block:0 40px}
+.pad{padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3{margin:0;line-height:1.2;text-wrap:balance;font-weight:700}
+p{margin:0}
+.num,.tab-num{font-variant-numeric:tabular-nums}
+a{color:var(--red)}
+
+/* App bar */
+.bar{background:var(--red);color:#fff;border-radius:0 0 28px 28px;box-shadow:0 8px 24px rgba(183,28,28,.25)}
+.bar .wrap{padding-block:22px 16px;display:grid;gap:16px}
+.brand{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.brand h1{font-size:clamp(22px,4vw,28px);letter-spacing:.01em}
+.stamp{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:600;letter-spacing:.02em}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:0;border-radius:999px;padding:10px 18px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;background:rgba(255,255,255,.14);color:#fff}
+.tab[aria-selected="true"]{background:#fff;color:var(--red);box-shadow:var(--shadow-sm)}
+.tab:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+main{padding-top:22px}
+.panel{display:grid;gap:18px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:22px;display:grid;gap:14px;min-width:0}
+.card.flat{box-shadow:none;border:1px solid var(--line)}
+.title-xl{font-size:clamp(24px,4vw,32px);font-weight:700}
+.lead{font-size:16.5px;color:var(--muted);max-width:64ch}
+.info{display:flex;gap:8px;align-items:flex-start;color:var(--muted);font-size:14px}
+.info::before{content:"i";flex:0 0 18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;margin-top:2px;font-style:normal}
+
+/* Facts + tables */
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.fact{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:18px;display:grid;gap:6px;align-content:start}
+.fact .k{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fact b{font-size:22px;color:var(--red);font-weight:700}
+.fact p{font-size:14px;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
+.tbl{overflow-x:auto;border-radius:16px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+th{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;background:var(--field)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted)}
+.lvl{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.lvl.l1{background:var(--l1-soft);color:var(--l1)} .lvl.l2{background:var(--l2-soft);color:var(--l2)}
+.lvl.l3{background:var(--l3-soft);color:var(--l3)} .lvl.l0{background:var(--l0-soft);color:var(--l0)}
+
+/* Form */
+.sheet{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:20px;align-items:start}
+form{display:grid;gap:16px}
+fieldset{margin:0;border:0;border-radius:var(--r);background:var(--card);box-shadow:var(--shadow);padding:22px;display:grid;gap:16px;min-width:0}
+legend{float:left;width:100%;padding:0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+legend + *{clear:both}
+legend .name{font-size:22px;font-weight:700}
+legend .part{font-size:12.5px;font-weight:600;color:var(--red);border:1.5px solid var(--red-ring);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.row.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.field{display:grid;gap:7px;min-width:0;align-content:start}
+.field > label,.field > .lab{font-size:14px;font-weight:600}
+.hint{font-size:12.5px;color:var(--muted)}
+input[type=number],input[type=text],input[type=date],input[type=search],select{
+  width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--field);border:1.5px solid transparent;border-radius:16px;padding:10px 14px;min-height:46px}
+input:focus,select:focus{outline:none;border-color:var(--red);background:#fff}
+button:focus-visible,.chips input:focus-visible + span{outline:3px solid var(--red-ring);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chips label{position:relative;cursor:pointer}
+.chips input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chips span{display:block;padding:10px 20px;border-radius:16px;background:#fff;color:var(--red);font-weight:600;font-size:15px;box-shadow:var(--shadow-sm);border:1px solid var(--line);min-height:44px;line-height:22px}
+.chips input:checked + span{background:var(--red);color:#fff;border-color:var(--red)}
+.noc-badge{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted);min-height:22px}
+.noc-badge b{color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;cursor:pointer}
+.btn{border-radius:16px;padding:12px 22px;font-weight:700;font-size:15.5px;border:1px solid var(--line);background:#fff;color:var(--red);box-shadow:var(--shadow-sm)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn.primary:hover{background:var(--red-dark)}
+.btn.small{padding:7px 14px;font-size:13.5px;border-radius:12px}
+.btn.ghost{background:none;box-shadow:none;border:0;color:var(--muted);text-decoration:underline;font-weight:500;padding:8px 4px}
+.errors{border-radius:16px;background:var(--red-soft);color:var(--red-dark);padding:12px 16px;font-size:14px}
+.errors ul{margin:6px 0 0;padding-left:18px}
+
+/* Results */
+aside.result{position:sticky;top:16px;display:grid;gap:16px;min-width:0}
+.bubbles{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;padding-block:4px}
+.bubble{width:132px;height:132px;border-radius:50%;display:grid;place-content:center;justify-items:center;text-align:center;gap:2px}
+.bubble.now{background:#fff;border:3px solid var(--red-ring);color:var(--red);box-shadow:var(--shadow)}
+.bubble.new{background:var(--red);color:#fff;box-shadow:0 10px 26px rgba(183,28,28,.35)}
+.bubble .k{font-size:12px;font-weight:600;opacity:.85;text-transform:uppercase;letter-spacing:.05em}
+.bubble .v{font-size:40px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.bubble .d{font-size:12.5px;font-weight:600}
+.verdict{font-size:15.5px;text-align:center}
+.track{position:relative;height:30px;border-radius:999px;background:var(--field);margin-top:18px}
+.band{position:absolute;top:0;bottom:0;background:var(--red-soft);border-radius:999px}
+.pin{position:absolute;top:-18px;transform:translateX(-50%);display:grid;justify-items:center;font-size:11.5px;font-weight:700;white-space:nowrap}
+.pin i{display:block;width:3px;height:40px;border-radius:2px;background:var(--muted)}
+.pin.new{color:var(--red)} .pin.new i{background:var(--red)}
+.axis{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--muted);margin-top:4px}
+.breakdown tfoot td{font-weight:700;border-top:2px solid var(--ink)}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.list li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:14.5px}
+.mark{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff}
+.mark.ok{background:var(--good)} .mark.no{background:var(--red)} .mark.warn{background:var(--warn)} .mark.do{background:var(--ink)}
+.levers{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.levers li{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:14.5px;padding:10px 14px;border-radius:14px;background:var(--field)}
+.plus{font-weight:800;color:var(--good);white-space:nowrap}
+.card h3{font-size:19px}
+.empty{text-align:center;justify-items:center}
+.empty .ring{width:120px;height:120px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-size:30px;font-weight:800;box-shadow:0 10px 26px rgba(183,28,28,.3)}
+.empty p{max-width:40ch;color:var(--muted)}
+
+/* List + finder */
+.toolbar{display:grid;gap:12px}
+.count{font-size:13.5px;color:var(--muted)}
+.scroll{max-height:62vh;overflow:auto;border-radius:16px;border:1px solid var(--line)}
+.scroll thead th{position:sticky;top:0;z-index:1}
+.results{display:grid;gap:12px}
+.res{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px;align-items:center;padding:14px 16px;border-radius:18px;background:#fff;box-shadow:var(--shadow-sm);border:1px solid var(--line)}
+.res .code{font-weight:800;color:var(--red);font-size:17px;font-variant-numeric:tabular-nums}
+.res .t{font-weight:600}
+.res .meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted);margin-top:4px}
+.decode{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.decode div{background:var(--field);border-radius:16px;padding:14px;display:grid;gap:4px}
+.decode .k{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.decode .v{font-weight:700}
+.pairs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.pair{border-radius:20px;border:1px solid var(--line);padding:16px;display:grid;gap:10px;background:#fff}
+.pair h4{margin:0;font-size:16px}
+.opt{display:grid;gap:4px;padding:10px 12px;border-radius:14px;background:var(--field)}
+.opt .top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-weight:700}
+.opt p{font-size:13.5px;color:var(--muted)}
+.steps{margin:0;padding-left:22px;display:grid;gap:8px}
+.steps li::marker{color:var(--red);font-weight:700}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:26px;font-size:13px;color:var(--muted);display:grid;gap:6px}
+
+@media (max-width:980px){
+  .sheet{grid-template-columns:minmax(0,1fr)}
+  aside.result{position:static}
+  .two,.pairs{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  .facts,.decode{grid-template-columns:minmax(0,1fr)}
+  .row.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card,fieldset{padding:18px}
+  .bubble{width:118px;height:118px} .bubble .v{font-size:34px}
+}
+@media (max-width:380px){ .row{grid-template-columns:minmax(0,1fr)} }
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto!important} }
+</style>
+
+<header class="bar pad">
+  <div class="wrap">
+    <div class="brand">
+      <h1>High-Wage CRS Check</h1>
+      <span class="stamp">In force Nov 3, 2026</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-calc" aria-controls="calc" aria-selected="true">CRS Check</button>
+      <button class="tab" role="tab" id="tab-list" aria-controls="list" aria-selected="false" tabindex="-1">High-wage occupation list</button>
+      <button class="tab" role="tab" id="tab-find" aria-controls="find" aria-selected="false" tabindex="-1">Find your NOC</button>
+    </nav>
+  </div>
+</header>
+
+<main class="pad">
+<div class="wrap">
+
+<!-- ============ TAB 1: CALCULATOR ============ -->
+<section class="panel" id="calc" role="tabpanel" aria-labelledby="tab-calc">
+  <div class="card">
+    <h2 class="title-xl">Does your job earn the new high-wage points?</h2>
+    <p class="lead">From November 3, 2026, Express Entry adds CRS points for Canadian work experience or a job offer in a high-wage occupation. Fill in your profile to see your NOC level, your score before and after, and what to do next.</p>
+    <p class="info">Announced by IRCC on October 16, 2026. Everyone already in the pool is rescored automatically.</p>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><span class="k">Experience bonus</span><b>+20 / +40 / +70</b><p>On top of your Canadian experience points, if 12+ months are in a listed occupation.</p></div>
+    <div class="fact"><span class="k">Job offer points</span><b>50 / 70 / 100</b><p>Only for offers in a listed occupation. No LMIA needed; IRCC checks the offer is genuine.</p></div>
+    <div class="fact"><span class="k">What decides it</span><b>Your NOC</b><p>The level comes from your NOC's national median wage, not your own salary.</p></div>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <h3>Points by level</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Level</th><th>NOC median vs. national</th><th class="num">Bonus</th><th class="num">Offer</th></tr></thead>
+        <tbody>
+          <tr><td><span class="lvl l1">Level 1</span></td><td>2× or more</td><td class="num">+70</td><td class="num">100</td></tr>
+          <tr><td><span class="lvl l2">Level 2</span></td><td>1.5× to under 2×</td><td class="num">+40</td><td class="num">70</td></tr>
+          <tr><td><span class="lvl l3">Level 3</span></td><td>1.3× to under 1.5×</td><td class="num">+20</td><td class="num">50</td></tr>
+          <tr><td><span class="lvl l0">Not listed</span></td><td>Under 1.3×</td><td class="num">0</td><td class="num">0</td></tr>
+        </tbody>
+      </table></div>
+      <p class="info">You get experience points (duration + bonus) or job offer points, whichever is higher. They don't add together. Cap: 150 single, 140 with an accompanying spouse.</p>
+    </div>
+    <div class="card">
+      <h3>Canadian experience points</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Years</th><th class="num">Single</th><th class="num">With spouse</th></tr></thead>
+        <tbody>
+          <tr><td>1 year</td><td class="num">40</td><td class="num">35</td></tr>
+          <tr><td>2 years</td><td class="num">53</td><td class="num">46</td></tr>
+          <tr><td>3 years</td><td class="num">64</td><td class="num">56</td></tr>
+          <tr><td>4 years</td><td class="num">72</td><td class="num">63</td></tr>
+          <tr><td>5+ years</td><td class="num">80</td><td class="num">70</td></tr>
+        </tbody>
+      </table></div>
+      <p class="info">These stay the same. The bonus is added on top.</p>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <form id="f" autocomplete="off" novalidate>
+      <fieldset>
+        <legend><span class="name">About you</span><span class="part">Part 1 of 7</span></legend>
+        <div class="row">
+          <div class="field"><label for="age">Age</label><input type="number" id="age" name="age" min="17" max="70" inputmode="numeric" placeholder="e.g. 27"></div>
+          <div class="field"><label for="marital">Marital status</label>
+            <select id="marital" name="marital">
+              <option value="single">Single</option>
+              <option value="married_acc">Married / common-law, partner coming with me</option>
+              <option value="married_non">Married / common-law, partner not coming or is a citizen/PR</option>
+            </select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="province">Where you live</label>
+            <select id="province" name="province">
+              <option value="">Select</option><option>Ontario</option><option>British Columbia</option><option>Alberta</option><option>Manitoba</option><option>Saskatchewan</option><option>Nova Scotia</option><option>New Brunswick</option><option>Newfoundland and Labrador</option><option>Prince Edward Island</option><option>Quebec</option><option>Yukon / NWT / Nunavut</option><option>Outside Canada</option>
+            </select></div>
+          <div class="field"><label for="status">Current status</label>
+            <select id="status" name="status">
+              <option value="">Select</option><option value="pgwp">Post-graduation work permit</option><option value="owp">Other open work permit</option><option value="ewp">Employer-specific work permit</option><option value="study">Study permit</option><option value="outside">Outside Canada</option><option value="other">Other</option>
+            </select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="permitExpiry">Permit expiry date</label><input type="date" id="permitExpiry" name="permitExpiry"><span class="hint">Optional</span></div>
+          <div class="field"><span class="lab" id="inPool-l">In the Express Entry pool now?</span>
+            <div class="chips" role="radiogroup" aria-labelledby="inPool-l">
+              <label><input type="radio" name="inPool" id="inPool-no" value="no" checked><span>No</span></label>
+              <label><input type="radio" name="inPool" id="inPool-yes" value="yes"><span>Yes</span></label>
+            </div></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="name">Education</span><span class="part">Part 2 of 7</span></legend>
+        <div class="field"><label for="edu">Highest education (anywhere)</label>
+          <select id="edu" name="edu">
+            <option value="">Select</option>
+            <option value="none">Less than secondary school</option>
+            <option value="secondary">Secondary (high school)</option>
+            <option value="one">One-year post-secondary program</option>
+            <option value="two">Two-year post-secondary program</option>
+            <option value="bachelor">Bachelor's or other 3+ year program</option>
+            <option value="multi">Two or more credentials, one is 3+ years</option>
+            <option value="master">Master's or professional degree (licensed profession)</option>
+            <option value="phd">Doctoral degree (PhD)</option>
+          </select></div>
+        <div class="field"><label for="cdnEdu">Canadian post-secondary credential</label>
+          <select id="cdnEdu" name="cdnEdu">
+            <option value="none">None</option><option value="short">1–2 year diploma or certificate</option><option value="long">3+ years, master's or PhD</option>
+          </select></div>
+        <div class="field"><span class="lab" id="eca-l">Educational Credential Assessment (ECA) for foreign education?</span>
+          <div class="chips" role="radiogroup" aria-labelledby="eca-l">
+            <label><input type="radio" name="eca" id="eca-yes" value="yes" checked><span>Yes</span></label>
+            <label><input type="radio" name="eca" id="eca-no" value="no"><span>No</span></label>
+            <label><input type="radio" name="eca" id="eca-na" value="na"><span>All Canadian</span></label>
+          </div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="name">Language</span><span class="part">Part 3 of 7</span></legend>
+        <div class="field"><span class="lab" id="test-l">English test</span>
+          <div class="chips" role="radiogroup" aria-labelledby="test-l">
+            <label><input type="radio" name="test" id="test-pte" value="pte" checked><span>PTE Core</span></label>
+            <label><input type="radio" name="test" id="test-ielts" value="ielts"><span>IELTS</span></label>
+            <label><input type="radio" name="test" id="test-celpip" value="celpip"><span>CELPIP</span></label>
+            <label><input type="radio" name="test" id="test-clb" value="clb"><span>CLB levels</span></label>
+          </div></div>
+        <div class="row four">
+          <div class="field"><label for="sS">Speaking</label><input type="number" id="sS" name="sS" step="any" inputmode="decimal"></div>
+          <div class="field"><label for="sL">Listening</label><input type="number" id="sL" name="sL" step="any" inputmode="decimal"></div>
+          <div class="field"><label for="sR">Reading</label><input type="number" id="sR" name="sR" step="any" inputmode="decimal"></div>
+          <div class="field"><label for="sW">Writing</label><input type="number" id="sW" name="sW" step="any" inputmode="decimal"></div>
+        </div>
+        <p class="info" id="clbOut">Enter your four scores to see your CLB levels.</p>
+        <div class="field"><label for="testDate">Test date</label><input type="date" id="testDate" name="testDate"><span class="hint">Results are valid for 2 years</span></div>
+        <div class="field"><span class="lab" id="fr-l">French test (TEF Canada / TCF Canada)?</span>
+          <div class="chips" role="radiogroup" aria-labelledby="fr-l">
+            <label><input type="radio" name="french" id="french-no" value="no" checked><span>No</span></label>
+            <label><input type="radio" name="french" id="french-yes" value="yes"><span>Yes</span></label>
+          </div></div>
+        <div class="row four" id="frRow" hidden>
+          <div class="field"><label for="fS">Speaking NCLC</label><select id="fS" name="fS"></select></div>
+          <div class="field"><label for="fL">Listening NCLC</label><select id="fL" name="fL"></select></div>
+          <div class="field"><label for="fR">Reading NCLC</label><select id="fR" name="fR"></select></div>
+          <div class="field"><label for="fW">Writing NCLC</label><select id="fW" name="fW"></select></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="name">Work experience</span><span class="part">Part 4 of 7</span></legend>
+        <div class="row">
+          <div class="field"><label for="cdnYears">Skilled Canadian work (TEER 0–3)</label>
+            <select id="cdnYears" name="cdnYears">
+              <option value="0">None or under 1 year</option><option value="1">1 year</option><option value="2">2 years</option><option value="3">3 years</option><option value="4">4 years</option><option value="5">5 years or more</option>
+            </select><span class="hint">Full-time or equal part-time, last 10 years. Work while a full-time student doesn't count.</span></div>
+          <div class="field"><label for="foreign">Skilled foreign work (last 10 years)</label>
+            <select id="foreign" name="foreign">
+              <option value="0">None or under 1 year</option><option value="1">1–2 years</option><option value="3">3 years or more</option>
+            </select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="cdnNoc">NOC code of your Canadian job</label>
+            <input type="text" id="cdnNoc" name="cdnNoc" list="nocList" inputmode="numeric" placeholder="e.g. 21222">
+            <div class="noc-badge" id="cdnNocBadge" aria-live="polite"></div>
+            <button type="button" class="btn ghost" data-go="find" style="justify-self:start">Not sure? Find your NOC</button></div>
+          <div class="field"><label for="cdnMonths">Months worked in this NOC in Canada</label>
+            <input type="number" id="cdnMonths" name="cdnMonths" min="0" max="240" inputmode="numeric" placeholder="e.g. 17"><span class="hint">The bonus needs 12+ months in a listed NOC</span></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="salary">Annual salary (CAD)</label><input type="number" id="salary" name="salary" min="0" step="1000" inputmode="numeric" placeholder="Optional"><span class="hint">Doesn't change high-wage points</span></div>
+          <div class="field"><span class="lab" id="coq-l">Canadian trade certificate of qualification?</span>
+            <div class="chips" role="radiogroup" aria-labelledby="coq-l">
+              <label><input type="radio" name="coq" id="coq-no" value="no" checked><span>No</span></label>
+              <label><input type="radio" name="coq" id="coq-yes" value="yes"><span>Yes</span></label>
+            </div></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="name">Job offer</span><span class="part">Part 5 of 7</span></legend>
+        <div class="field"><span class="lab" id="offer-l">Written full-time job offer, lasting 1+ year after you become PR?</span>
+          <div class="chips" role="radiogroup" aria-labelledby="offer-l">
+            <label><input type="radio" name="offer" id="offer-no" value="no" checked><span>No</span></label>
+            <label><input type="radio" name="offer" id="offer-yes" value="yes"><span>Yes</span></label>
+          </div></div>
+        <div class="field" id="offerNocField" hidden><label for="offerNoc">NOC code of the offered job</label>
+          <input type="text" id="offerNoc" name="offerNoc" list="nocList" inputmode="numeric" placeholder="e.g. 21231">
+          <div class="noc-badge" id="offerNocBadge" aria-live="polite"></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="name">Additional</span><span class="part">Part 6 of 7</span></legend>
+        <div class="field"><span class="lab" id="sib-l">Do you or your partner have a brother or sister in Canada who is a citizen or PR (18+)?</span>
+          <div class="chips" role="radiogroup" aria-labelledby="sib-l">
+            <label><input type="radio" name="sibling" id="sibling-yes" value="yes"><span>Yes</span></label>
+            <label><input type="radio" name="sibling" id="sibling-no" value="no" checked><span>No</span></label>
+          </div></div>
+        <div class="field"><span class="lab" id="pnp-l">Do you have a nomination certificate from a province or territory?</span>
+          <div class="chips" role="radiogroup" aria-labelledby="pnp-l">
+            <label><input type="radio" name="pnp" id="pnp-yes" value="yes"><span>Yes</span></label>
+            <label><input type="radio" name="pnp" id="pnp-no" value="no" checked><span>No</span></label>
+          </div></div>
+      </fieldset>
+
+      <fieldset id="spouseSet" hidden>
+        <legend><span class="name">Spouse or partner</span><span class="part">Part 7 of 7</span></legend>
+        <div class="row">
+          <div class="field"><label for="spEdu">Partner's highest education</label>
+            <select id="spEdu" name="spEdu">
+              <option value="none">Less than secondary</option><option value="secondary">Secondary</option><option value="one">One-year program</option><option value="two">Two-year program</option><option value="bachelor">Bachelor's / 3+ years</option><option value="multi">Two or more, one 3+ years</option><option value="master">Master's / professional</option><option value="phd">PhD</option>
+            </select></div>
+          <div class="field"><label for="spCdn">Partner's Canadian work</label>
+            <select id="spCdn" name="spCdn"><option value="0">None or under 1 year</option><option value="1">1 year</option><option value="2">2 years</option><option value="3">3 years</option><option value="4">4 years</option><option value="5">5+ years</option></select></div>
+        </div>
+        <div class="row four">
+          <div class="field"><label for="pS">Speaking CLB</label><select id="pS" name="pS"></select></div>
+          <div class="field"><label for="pL">Listening CLB</label><select id="pL" name="pL"></select></div>
+          <div class="field"><label for="pR">Reading CLB</label><select id="pR" name="pR"></select></div>
+          <div class="field"><label for="pW">Writing CLB</label><select id="pW" name="pW"></select></div>
+        </div>
+      </fieldset>
+
+      <div class="errors" id="errors" hidden></div>
+      <div class="actions">
+        <button type="submit" class="btn primary" id="go">Check my score</button>
+        <button type="button" class="btn" id="clear">Clear form</button>
+        <button type="button" class="btn ghost" id="example">Fill with an example profile</button>
+      </div>
+      <p class="info">Answers are kept in this browser while you work and erased when you reload the page. Nothing is sent anywhere.</p>
+    </form>
+
+    <aside class="result" id="result" aria-live="polite">
+      <div class="card empty">
+        <div class="ring">CRS</div>
+        <h3>Your score appears here</h3>
+        <p>Fill in Parts 1–6 and press Check my score. You'll see your NOC level, your CRS today and from November 3, and what to do next.</p>
+        <button type="button" class="btn" id="example2">Try an example profile</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ TAB 2: HIGH-WAGE LIST ============ -->
+<section class="panel" id="list" role="tabpanel" aria-labelledby="tab-list" hidden>
+  <div class="card">
+    <h2 class="title-xl">High-wage occupation list</h2>
+    <p class="lead">IRCC's list for Express Entry, in force November 3, 2026. It uses 2023–2025 wage data; each NOC gets the highest level it reached in any of those years.</p>
+    <p class="info">If the list changes after you get an Invitation to Apply, IRCC keeps the level that applied on your invitation date.</p>
+  </div>
+  <div class="card">
+    <div class="toolbar">
+      <input type="search" id="listFilter" placeholder="Search by NOC code or job name" autocomplete="off" aria-label="Search the high-wage list">
+      <div class="chips" role="radiogroup" aria-label="Filter by level" id="levelChips">
+        <label><input type="radio" name="lvlf" id="lvlf-all" value="all" checked><span>All</span></label>
+        <label><input type="radio" name="lvlf" id="lvlf-1" value="1"><span>Level 1</span></label>
+        <label><input type="radio" name="lvlf" id="lvlf-2" value="2"><span>Level 2</span></label>
+        <label><input type="radio" name="lvlf" id="lvlf-3" value="3"><span>Level 3</span></label>
+      </div>
+      <p class="count" id="listCount"></p>
+    </div>
+    <div class="scroll"><table>
+      <thead><tr><th>NOC</th><th>Occupation</th><th>TEER</th><th>Level</th><th class="num">Bonus / Offer</th><th><span class="vh">Action</span></th></tr></thead>
+      <tbody id="listBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ============ TAB 3: FIND YOUR NOC ============ -->
+<section class="panel" id="find" role="tabpanel" aria-labelledby="tab-find" hidden>
+  <div class="card">
+    <h2 class="title-xl">Find your NOC</h2>
+    <p class="lead">Search by job title, a keyword from your duties, or a 5-digit code. Then compare duties: IRCC assigns your NOC by what you actually do, not your job title.</p>
+    <input type="search" id="findQ" placeholder="e.g. QA analyst, software developer, electrician, 22222" autocomplete="off" aria-label="Search occupations">
+    <div id="decode"></div>
+    <p class="count" id="findCount"></p>
+    <div class="results" id="findResults"></div>
+  </div>
+
+  <div class="card">
+    <h3>How to confirm your NOC</h3>
+    <ol class="steps">
+      <li>Write down the 5–8 tasks you spend most of your week on, with rough percentages.</li>
+      <li>Search above for your title and two or three of those tasks. Shortlist every code that comes up.</li>
+      <li>For each shortlisted code, check that the description matches your work and that you do most of its main duties.</li>
+      <li>Check the TEER (second digit). Express Entry counts only TEER 0, 1, 2 and 3 as skilled work.</li>
+      <li>Ask your employer for a reference letter listing your real duties, hours, dates and pay. It must support the code you choose.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Commonly confused occupations</h3>
+    <p class="note">The same job title can sit in two codes. The difference is in the duties, and it can change your high-wage points.</p>
+    <div class="pairs" id="pairs"></div>
+  </div>
+
+  <div class="card flat">
+    <h3>Reading a NOC code</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>TEER</th><th>Usual training</th><th>Express Entry skilled?</th></tr></thead>
+      <tbody>
+        <tr><td class="num">0</td><td>Management occupations</td><td>Yes</td></tr>
+        <tr><td class="num">1</td><td>University degree</td><td>Yes</td></tr>
+        <tr><td class="num">2</td><td>College diploma or apprenticeship of 2+ years, or supervisory roles</td><td>Yes</td></tr>
+        <tr><td class="num">3</td><td>College diploma or apprenticeship under 2 years, or 6+ months on-the-job training</td><td>Yes</td></tr>
+        <tr><td class="num">4</td><td>High school diploma or several weeks of on-the-job training</td><td>No</td></tr>
+        <tr><td class="num">5</td><td>Short work demonstration, no formal education</td><td>No</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">First digit = broad occupational category. Second digit = TEER (codes starting 00 are TEER 0).</p>
+    <p class="note" id="coverage"></p>
+  </div>
+</section>
+
+<footer>
+  <p>Sources: IRCC news release and backgrounder (Oct 16, 2026), IRCC high-wage occupation list, CIC News draw reports (CEC cut-offs Jun–Sep 2026).</p>
+  <p>This is an estimate, not legal advice. Confirm your score in your IRCC account, and consider a licensed RCIC or lawyer for your NOC choice.</p>
+</footer>
+</div>
+</main>
+<datalist id="nocList"></datalist>
+
+<script>
+(function(){
+"use strict";
+var KEY="hw-crs-form-v1";
+
+/* ---------- IRCC high-wage list (in force Nov 3, 2026) ---------- */
+var RAW={
+1:"00011|Senior government managers and officials;00012|Senior managers - financial, communications and other business services;00013|Senior managers - health, education, social and community services and membership organizations;10010|Financial managers;10011|Human resources managers;10012|Purchasing managers;10020|Insurance, real estate and financial brokerage managers;10021|Banking, credit and other investment managers;20010|Engineering managers;20011|Architecture and science managers;20012|Computer and information systems managers;21330|Mining engineers;21332|Petroleum engineers;31100|Specialists in clinical and laboratory medicine;31101|Specialists in surgery;31102|General practitioners and family physicians;31103|Veterinarians;31302|Nurse practitioners;31303|Physician assistants, midwives and allied health professionals;40010|Government managers - health and social policy development and program administration;40011|Government managers - economic analysis, policy development and program administration;40012|Government managers - education policy development and program administration;40019|Other managers in public administration;40040|Commissioned police officers and related occupations in public protection services;40041|Fire chiefs and senior firefighting officers;41100|Judges;41101|Lawyers and Quebec notaries;41200|University professors and lecturers;60010|Corporate sales managers;80010|Managers in natural resources production and fishing;90011|Utilities managers",
+2:"00014|Senior managers - trade, broadcasting and other services;00015|Senior managers - construction, transportation, production and utilities;10019|Other administrative services managers;10022|Advertising, marketing and public relations managers;10029|Other business services managers;10030|Telecommunication carriers managers;11103|Securities agents, investment dealers and brokers;11201|Professional occupations in business management consulting;21100|Physicists and astronomers;21102|Geoscientists and oceanographers;21103|Meteorologists and climatologists;21109|Other professional occupations in physical sciences;21111|Forestry professionals;21120|Public and environmental health and safety professionals;21202|Urban and land use planners;21210|Mathematicians, statisticians and actuaries;21211|Data scientists;21220|Cybersecurity specialists;21221|Business systems specialists;21222|Information systems specialists;21223|Database analysts and data administrators;21230|Computer systems developers and programmers;21231|Software engineers and designers;21232|Software developers and programmers;21300|Civil engineers;21301|Mechanical engineers;21310|Electrical and electronics engineers;21311|Computer engineers (except software engineers and designers);21320|Chemical engineers;21321|Industrial and manufacturing engineers;21322|Metallurgical and materials engineers;21331|Geological engineers;21390|Aerospace engineers;21399|Other professional engineers;22231|Engineering inspectors and regulatory officers;22312|Industrial instrument technicians and mechanics;30010|Managers in health care;31110|Dentists;31112|Audiologists and speech-language pathologists;31120|Pharmacists;31200|Psychologists;31202|Physiotherapists;31203|Occupational therapists;31300|Nursing coordinators and supervisors;31301|Registered nurses and registered psychiatric nurses;32111|Dental hygienists and dental therapists;40020|Administrators - post-secondary education and vocational training;40021|School principals and administrators of elementary and secondary education;40030|Managers in social, community and correctional services;40042|Commissioned officers of the Canadian Armed Forces;41210|College and other vocational instructors;41220|Secondary school teachers;41221|Elementary school and kindergarten teachers;41310|Police investigators and other investigative occupations;41311|Probation and parole officers;41320|Educational counsellors;41401|Economists and economic policy researchers and analysts;41402|Business development officers and market researchers and analysts;41404|Health policy researchers, consultants and program officers;41407|Program officers unique to government;42100|Police officers (except commissioned);42101|Firefighters;50010|Library, archive, museum and art gallery managers;50011|Managers - publishing, motion pictures, broadcasting and performing arts;51100|Librarians;70010|Construction managers;70012|Facility operation and maintenance managers;70020|Managers in transportation;70021|Postal and courier services managers;72011|Contractors and supervisors, electrical trades and telecommunications occupations;72012|Contractors and supervisors, pipefitting trades;72023|Supervisors, railway transport operations;72103|Boilermakers;72202|Power system electricians;72203|Electrical power line and cable workers;72301|Steamfitters, pipefitters and sprinkler system installers;72406|Elevator constructors and mechanics;72600|Air pilots, flight engineers and flying instructors;72601|Air traffic controllers and related occupations;72604|Railway traffic controllers and marine traffic regulators;73310|Railway and yard locomotive engineers;82020|Supervisors, mining and quarrying;82021|Contractors and supervisors, oil and gas drilling and services;83101|Oil and gas well drillers, servicers, testers and related workers;90010|Manufacturing managers;92011|Supervisors, petroleum, gas and chemical processing and utilities;92100|Power engineers and power systems operators;93100|Central control and process operators, mineral and metal processing;93101|Central control and process operators, petroleum, gas and chemical processing",
+3:"00010|Legislators;11100|Financial auditors and accountants;11101|Financial and investment analysts;11102|Financial advisors;11109|Other financial officers;11200|Human resources professionals;12201|Insurance adjusters and claims examiners;12203|Assessors, business valuators and appraisers;21101|Chemists;21110|Biologists and related scientists;21112|Agricultural representatives, consultants and specialists;21200|Architects;21201|Landscape architects;21203|Land surveyors;21234|Web developers and programmers;22214|Technical occupations in geomatics and meteorology;22232|Occupational health and safety specialists;22233|Construction inspectors;22310|Electrical and electronics engineering technologists and technicians;22313|Aircraft instrument, electrical and avionics mechanics, technicians and inspectors;31121|Dietitians and nutritionists;32102|Paramedical occupations;32103|Respiratory therapists, clinical perfusionists and cardiopulmonary technologists;32120|Medical laboratory technologists;32121|Medical radiation technologists;32122|Medical sonographers;41300|Social workers;41400|Natural and applied science policy researchers, consultants and program officers;41403|Social policy researchers, consultants and program officers;41405|Education policy researchers, consultants and program officers;41409|Other professional occupations in social science;43201|Correctional service officers;43203|Border services, customs, and immigration officers;50012|Recreation, sports and fitness program and service directors;51101|Conservators and curators;51102|Archivists;51111|Authors and writers (except technical);51112|Technical writers;51120|Producers, directors, choreographers and related occupations;52112|Broadcast technicians;60020|Retail and wholesale trade managers;60031|Accommodation service managers;60040|Managers in customer and personal services;72010|Contractors and supervisors, machining, metal forming, shaping and erecting trades and related occupations;72013|Contractors and supervisors, carpentry trades;72014|Contractors and supervisors, other construction trades, installers, repairers and servicers;72020|Contractors and supervisors, mechanic trades;72021|Contractors and supervisors, heavy equipment operator crews;72102|Sheet metal workers;72105|Ironworkers;72201|Industrial electricians;72302|Gas fitters;72320|Bricklayers;72321|Insulators;72401|Heavy-duty equipment mechanics;72403|Railway carmen/women;72404|Aircraft mechanics and aircraft inspectors;72500|Crane operators;72602|Deck officers, water transport;72603|Engineer officers, water transport;73311|Railway conductors and brakemen/women;82010|Supervisors, logging and forestry;83100|Underground production and development miners;83120|Fishing masters and officers;92010|Supervisors, mineral and metal processing;93102|Pulping, papermaking and coating control operators"
+};
+/* Common occupations NOT on the high-wage list */
+var UNLISTED="22222|Information systems testing technicians;22220|Computer network and web technicians;22221|User support technicians;21233|Web designers;22100|Chemical technologists and technicians;22110|Biological technologists and technicians;22210|Architectural technologists and technicians;22211|Industrial designers;22212|Drafting technologists and technicians;22230|Non-destructive testers and inspectors;22300|Civil engineering technologists and technicians;22301|Mechanical engineering technologists and technicians;22302|Industrial engineering and manufacturing technologists and technicians;22303|Construction estimators;22311|Electronic service technicians (household and business equipment);11202|Professional occupations in advertising, marketing and public relations;12010|Supervisors, general office and administrative support workers;12100|Executive assistants;12101|Human resources and recruitment officers;12102|Procurement and purchasing agents and officers;12200|Accounting technicians and bookkeepers;13100|Administrative officers;13101|Property administrators;13102|Payroll administrators;13110|Administrative assistants;13111|Legal administrative assistants;13112|Medical administrative assistants;13201|Production and transportation logistics coordinators;14100|General office support workers;14101|Receptionists;14400|Shippers and receivers;31111|Optometrists;31201|Chiropractors;31209|Other professional occupations in health diagnosing and treating;32101|Licensed practical nurses;32109|Other technical occupations in therapy and assessment;33100|Dental assistants and dental laboratory assistants;33102|Nurse aides, orderlies and patient service associates;33103|Pharmacy technical assistants and pharmacy assistants;41301|Therapists in counselling and related specialized therapies;41302|Religious leaders;42200|Paralegal and related occupations;42201|Social and community service workers;42202|Early childhood educators and assistants;43100|Elementary and secondary school teacher assistants;51110|Editors;51113|Journalists;51114|Translators, terminologists and interpreters;52120|Graphic designers and illustrators;52121|Interior designers and interior decorators;60030|Restaurant and food service managers;62010|Retail sales supervisors;62020|Food service supervisors;62100|Technical sales specialists - wholesale trade;62101|Retail and wholesale buyers;62200|Chefs;63100|Insurance agents and brokers;63101|Real estate agents and salespersons;63200|Cooks;64100|Retail salespersons and visual merchandisers;64101|Sales and account representatives - wholesale trade (non-technical);64300|Maîtres d'hôtel and hosts/hostesses;64301|Bartenders;65100|Cashiers;65102|Store shelf stockers, clerks and order fillers;65310|Light duty cleaners;70011|Home building and renovation managers;72100|Machinists and machining and tooling inspectors;72106|Welders and related machine operators;72200|Electricians (except industrial and power system);72300|Plumbers;72310|Carpenters;72311|Cabinetmakers;72400|Construction millwrights and industrial mechanics;72402|Heating, refrigeration and air conditioning mechanics;72410|Automotive service technicians, truck and bus mechanics and mechanical repairers;72422|Electrical mechanics;73300|Transport truck drivers;73301|Bus drivers, subway operators and other transit operators;73400|Heavy equipment operators;75101|Material handlers;75110|Construction trades helpers and labourers";
+/* Search keywords people use (not official titles) */
+var ALIAS={"21222":"qa analyst quality assurance analyst systems analyst it analyst systems auditor it consultant","22222":"qa tester quality assurance tester software tester test automation manual testing uat test coordinator","21231":"software engineer software architect","21232":"developer programmer coder full stack backend frontend mobile app developer","21234":"web developer front-end developer javascript","21233":"ui designer web designer ux designer","22220":"network technician web technician lan wan network support","22221":"help desk it support technical support desktop support","21223":"database administrator dba data administrator","21211":"data scientist machine learning ai","21220":"cybersecurity security analyst information security","21221":"business systems analyst business analyst erp","21230":"systems developer embedded programmer","21311":"computer engineer hardware engineer embedded hardware","21310":"electrical engineer electronics engineer","22310":"electronics technician electrical technologist electronics technologist","22312":"instrumentation technician","20012":"it manager cto director of it","11100":"accountant cpa auditor","31301":"registered nurse rn","32101":"lpn practical nurse rpn","33102":"psw personal support worker nurse aide","73300":"truck driver az dz","63200":"cook line cook","62200":"chef sous chef","62020":"food service supervisor","60030":"restaurant manager","72200":"electrician construction electrician","72201":"industrial electrician","72300":"plumber","72402":"hvac technician refrigeration mechanic","72410":"mechanic automotive technician","13110":"admin assistant administrative assistant","12200":"bookkeeper accounting clerk accounts payable","13100":"office administrator administrative officer office manager","11202":"marketing specialist digital marketing","10022":"marketing manager","21300":"civil engineer structural engineer","22300":"civil engineering technician civil technologist","70010":"construction manager construction project manager","22303":"estimator quantity surveyor","42202":"ece early childhood educator","41221":"teacher elementary teacher","41220":"teacher high school teacher","64100":"retail sales associate","65100":"cashier","14400":"shipper receiver warehouse","75101":"material handler warehouse worker","52120":"graphic designer","11201":"management consultant","11101":"financial analyst investment analyst","11200":"hr generalist human resources","12101":"recruiter hr coordinator","21301":"mechanical engineer","22301":"mechanical technician","70012":"facility manager","72106":"welder","72310":"carpenter","73400":"heavy equipment operator","31120":"pharmacist","31102":"family doctor physician gp"};
+var CAT={"0":"Legislative and senior management","1":"Business, finance and administration","2":"Natural and applied sciences","3":"Health","4":"Education, law, social, community and government services","5":"Art, culture, recreation and sport","6":"Sales and service","7":"Trades, transport and equipment operators","8":"Natural resources, agriculture and related production","9":"Manufacturing and utilities"};
+
+var NOC={};
+[1,2,3].forEach(function(l){ RAW[l].split(";").forEach(function(s){ var p=s.split("|"); NOC[p[0]]={code:p[0],title:p[1],level:l}; }); });
+UNLISTED.split(";").forEach(function(s){ var p=s.split("|"); if(!NOC[p[0]]) NOC[p[0]]={code:p[0],title:p[1],level:0}; });
+var ALL=Object.keys(NOC).map(function(k){return NOC[k];}).sort(function(a,b){return a.code<b.code?-1:1;});
+var LISTED=ALL.filter(function(n){return n.level>0;});
+
+function teerOf(code){ return code.slice(0,2)==="00"?0:parseInt(code.charAt(1),10); }
+function parseNoc(v){ var m=String(v||"").match(/\d{5}/); return m?m[0]:""; }
+function nocInfo(v){ var code=parseNoc(v); if(!code) return null; var n=NOC[code]; return {code:code,title:n?n.title:"",level:n?n.level:0,known:!!n,teer:teerOf(code)}; }
+var BONUS={1:70,2:40,3:20}, OFFER={1:100,2:70,3:50};
+function lvlBadge(l){ return l?'<span class="lvl l'+l+'">Level '+l+'</span>':'<span class="lvl l0">Not listed</span>'; }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+document.getElementById("nocList").innerHTML=ALL.map(function(n){return '<option value="'+n.code+' '+esc(n.title)+'"></option>';}).join("");
+
+/* ---------- Tabs ---------- */
+var TABS=["calc","list","find"];
+function showTab(id,focus){
+  if(TABS.indexOf(id)<0) id="calc";
+  TABS.forEach(function(t){
+    var b=document.getElementById("tab-"+t), p=document.getElementById(t), on=t===id;
+    b.setAttribute("aria-selected",on?"true":"false"); b.tabIndex=on?0:-1; p.hidden=!on;
+  });
+  if(focus) document.getElementById("tab-"+id).focus();
+  try{ history.replaceState(null,"","#"+id); }catch(e){}
+  window.scrollTo({top:0,behavior:"auto"});
+}
+TABS.forEach(function(t,i){
+  var b=document.getElementById("tab-"+t);
+  b.addEventListener("click",function(){showTab(t);});
+  b.addEventListener("keydown",function(e){
+    if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ e.preventDefault(); var j=(i+(e.key==="ArrowRight"?1:TABS.length-1))%TABS.length; showTab(TABS[j],true); }
+  });
+});
+document.addEventListener("click",function(e){
+  var g=e.target.closest("[data-go]"); if(g){ showTab(g.getAttribute("data-go")); return; }
+  var u=e.target.closest("[data-use]"); if(u){ useNoc(u.getAttribute("data-use")); }
+});
+function useNoc(code){
+  var n=NOC[code]; document.getElementById("cdnNoc").value=code+(n?" "+n.title:"");
+  showTab("calc"); onChange();
+  var el=document.getElementById("cdnNoc"); el.scrollIntoView({behavior:"smooth",block:"center"}); el.focus({preventScroll:true});
+}
+
+/* ---------- Tab 2: list ---------- */
+var lb=document.getElementById("listBody");
+function renderList(){
+  var q=(document.getElementById("listFilter").value||"").toLowerCase().trim();
+  var lf=document.querySelector('input[name="lvlf"]:checked').value;
+  var rows=LISTED.filter(function(n){ return (lf==="all"||String(n.level)===lf) && (!q||n.code.indexOf(q)>-1||n.title.toLowerCase().indexOf(q)>-1||(ALIAS[n.code]||"").indexOf(q)>-1); });
+  lb.innerHTML=rows.map(function(n){return '<tr><td class="num"><b>'+n.code+'</b></td><td>'+esc(n.title)+'</td><td class="num">'+teerOf(n.code)+'</td><td>'+lvlBadge(n.level)+'</td><td class="num">+'+BONUS[n.level]+' / '+OFFER[n.level]+'</td><td><button type="button" class="btn small" data-use="'+n.code+'">Use</button></td></tr>';}).join("")
+    || '<tr><td colspan="6">No listed occupation matches. A NOC that isn\'t on this list earns no high-wage points. Try the Find your NOC tab.</td></tr>';
+  var c={1:0,2:0,3:0}; LISTED.forEach(function(n){c[n.level]++;});
+  document.getElementById("listCount").textContent="Showing "+rows.length+" of "+LISTED.length+" listed occupations · Level 1: "+c[1]+" · Level 2: "+c[2]+" · Level 3: "+c[3];
+}
+document.getElementById("listFilter").addEventListener("input",renderList);
+document.getElementById("levelChips").addEventListener("change",renderList);
+renderList();
+
+/* ---------- Tab 3: finder ---------- */
+var PAIRS=[
+  {t:"QA analyst or software tester",a:[["21222","Designs QA policies, procedures and tests across the software life cycle; analyzes systems requirements; advises on information systems. Example titles include information systems QA analyst and systems auditor."],["22222","Executes test plans: sets up software and hardware for testing, runs tests, documents results and tracks defects. Example titles include software tester, application tester and QA tester."]]},
+  {t:"Software engineer, developer or web developer",a:[["21231","Researches, designs and architects software systems and their components."],["21232","Writes, modifies, tests and maintains code for software applications."],["21234","Builds and maintains websites and web applications."],["21233","Plans and creates the look, layout and user experience of websites."]]},
+  {t:"IT support, network or systems",a:[["22221","Answers user questions and fixes hardware and software problems for end users."],["22220","Sets up, maintains and troubleshoots networks, servers and web systems."],["21222","Analyzes and plans information systems and advises on them."]]},
+  {t:"Engineer or technologist",a:[["21310","Designs and develops electrical and electronic systems. Engineering titles are regulated; licensing (P.Eng or EIT) usually applies."],["22310","Builds, tests and troubleshoots electrical and electronic equipment under engineering direction."],["21300","Plans and designs civil and structural projects. Regulated title."],["22300","Supports civil projects with drafting, surveying, testing and site inspection."]]},
+  {t:"Electrician",a:[["72200","Installs and repairs wiring in buildings."],["72201","Installs and maintains electrical equipment in plants, mills and industrial sites."],["72202","Installs and maintains power generation and distribution equipment."]]}
+];
+document.getElementById("pairs").innerHTML=PAIRS.map(function(p){
+  return '<div class="pair"><h4>'+esc(p.t)+'</h4>'+p.a.map(function(o){ var n=NOC[o[0]]; return '<div class="opt"><div class="top"><span>'+o[0]+'</span><span>'+esc(n?n.title:"")+'</span>'+lvlBadge(n?n.level:0)+'</div><p>'+esc(o[1])+'</p></div>'; }).join("")+'</div>';
+}).join("");
+document.getElementById("coverage").textContent="This finder covers all "+LISTED.length+" high-wage occupations and "+(ALL.length-LISTED.length)+" common occupations that aren't on the list. Canada's full classification has 516 occupations; if yours isn't here, it isn't on the high-wage list.";
+
+function score(n,words){
+  var hay=(n.code+" "+n.title+" "+(ALIAS[n.code]||"")).toLowerCase(), s=0;
+  for(var i=0;i<words.length;i++){ var w=words[i]; if(hay.indexOf(w)<0) return 0; s+= n.title.toLowerCase().indexOf(w)>-1?3:1; if(n.code.indexOf(w)===0) s+=5; }
+  return s;
+}
+function renderFind(){
+  var q=(document.getElementById("findQ").value||"").toLowerCase().trim(), out=document.getElementById("findResults"), dc=document.getElementById("decode"), cnt=document.getElementById("findCount");
+  dc.innerHTML="";
+  if(!q){ out.innerHTML=""; cnt.textContent="Try a job title like \"QA analyst\" or a code like 21222."; return; }
+  var code=parseNoc(q);
+  if(code){
+    var t=teerOf(code), n=NOC[code];
+    dc.innerHTML='<div class="decode"><div><span class="k">Broad category</span><span class="v">'+esc(CAT[code.charAt(0)]||"Unknown")+'</span></div><div><span class="k">TEER</span><span class="v">'+t+(t<=3?" · skilled for Express Entry":" · not skilled for Express Entry")+'</span></div><div><span class="k">High-wage level</span><span class="v">'+(n&&n.level?"Level "+n.level+" (+"+BONUS[n.level]+" / "+OFFER[n.level]+")":"Not on the list")+'</span></div></div>';
+  }
+  var words=q.replace(/[^a-z0-9\- ]/g," ").split(/\s+/).filter(function(w){return w.length>1;});
+  var hits=ALL.map(function(n){return {n:n,s:score(n,words)};}).filter(function(x){return x.s>0;}).sort(function(a,b){return b.s-a.s||(b.n.level>0)-(a.n.level>0);}).slice(0,30);
+  cnt.textContent=hits.length?hits.length+" match"+(hits.length===1?"":"es"):"No matches. Try a shorter title or one main task (e.g. \"tester\", \"network\", \"nurse\").";
+  out.innerHTML=hits.map(function(h){ var n=h.n, t=teerOf(n.code);
+    return '<div class="res"><div><div><span class="code">'+n.code+'</span> <span class="t">'+esc(n.title)+'</span></div><div class="meta">'+lvlBadge(n.level)+'<span>TEER '+t+'</span><span>'+esc(CAT[n.code.charAt(0)])+'</span>'+(n.level?'<span>Bonus +'+BONUS[n.level]+' · Offer '+OFFER[n.level]+'</span>':'')+'</div></div><button type="button" class="btn small" data-use="'+n.code+'">Use in calculator</button></div>'; }).join("");
+}
+document.getElementById("findQ").addEventListener("input",renderFind);
+renderFind();
+
+/* ---------- Language ---------- */
+function fillClb(id,first){ var el=document.getElementById(id), h='<option value="">'+(first||"Select")+'</option>'; for(var c=10;c>=4;c--){ h+='<option value="'+c+'">'+(c===10?"10+":c)+'</option>'; } el.innerHTML=h+'<option value="3">3 or less</option>'; }
+["fL","fR","fW","fS"].forEach(function(i){fillClb(i);});
+["pL","pR","pW","pS"].forEach(function(i){fillClb(i,"None");});
+var CONV={
+  ielts:{L:[[8.5,10],[8,9],[7.5,8],[6,7],[5.5,6],[5,5],[4.5,4]],R:[[8,10],[7,9],[6.5,8],[6,7],[5,6],[4,5],[3.5,4]],W:[[7.5,10],[7,9],[6.5,8],[6,7],[5.5,6],[5,5],[4,4]],S:[[7.5,10],[7,9],[6.5,8],[6,7],[5.5,6],[5,5],[4,4]]},
+  pte:{L:[[89,10],[82,9],[71,8],[60,7],[50,6],[39,5],[28,4]],R:[[88,10],[78,9],[69,8],[60,7],[51,6],[42,5],[33,4]],W:[[90,10],[88,9],[79,8],[69,7],[60,6],[51,5],[41,4]],S:[[89,10],[84,9],[76,8],[68,7],[59,6],[51,5],[42,4]]}
+};
+var RANGE={ielts:"0–9",pte:"10–90",celpip:"1–12",clb:"CLB"};
+function toClb(test,ab,score){
+  if(score===""||score==null||isNaN(score)) return null; score=Number(score);
+  if(test==="celpip"||test==="clb") return Math.max(0,Math.min(10,Math.floor(score)));
+  var t=CONV[test][ab]; for(var i=0;i<t.length;i++){ if(score>=t[i][0]) return t[i][1]; } return 3;
+}
+
+/* ---------- CRS ---------- */
+var AGE_S={18:99,19:105,30:105,31:99,32:94,33:88,34:83,35:77,36:72,37:66,38:61,39:55,40:50,41:39,42:28,43:17,44:6};
+var AGE_P={18:90,19:95,30:95,31:90,32:85,33:80,34:75,35:70,36:65,37:60,38:55,39:50,40:45,41:35,42:25,43:15,44:5};
+function agePts(a,sp){ if(a<18||a>=45) return 0; if(a>=20&&a<=29) return sp?100:110; return (sp?AGE_P:AGE_S)[a]||0; }
+var EDU={none:[0,0,0],secondary:[30,28,2],one:[90,84,6],two:[98,91,7],bachelor:[120,112,8],multi:[128,119,9],master:[135,126,10],phd:[150,140,10]};
+function lang1(c,sp){ if(c<4) return 0; if(c<=5) return 6; if(c===6) return sp?8:9; if(c===7) return sp?16:17; if(c===8) return sp?22:23; if(c===9) return sp?29:31; return sp?32:34; }
+function lang2(c){ if(c<=4) return 0; if(c<=6) return 1; if(c<=8) return 3; return 6; }
+function langSp(c){ if(c<=4) return 0; if(c<=6) return 1; if(c<=8) return 3; return 5; }
+var CDN=[[0,40,53,64,72,80],[0,35,46,56,63,70]], CDN_SP=[0,5,7,8,9,10];
+
+function calc(d){
+  var sp=d.marital==="married_acc", r={sp:sp};
+  r.age=agePts(d.age,sp); r.edu=EDU[d.edu][sp?1:0];
+  var minC=Math.min.apply(null,d.clb); r.minClb=minC;
+  r.lang1=d.clb.reduce(function(s,c){return s+lang1(c,sp);},0);
+  var minF=d.french?Math.min.apply(null,d.nclc):0;
+  r.lang2=d.french?Math.min(sp?22:24,d.nclc.reduce(function(s,c){return s+lang2(c);},0)):0;
+  r.cdn=CDN[sp?1:0][d.cdnYears];
+  r.spouse=sp?EDU[d.spEdu][2]+Math.min(20,d.spClb.reduce(function(s,c){return s+langSp(c);},0))+CDN_SP[d.spCdn]:0;
+  var eb=(d.edu==="one"||d.edu==="two"||d.edu==="bachelor")?1:((d.edu==="multi"||d.edu==="master"||d.edu==="phd")?2:0);
+  var eL=0,eC=0;
+  if(eb===1){ eL=minC>=9?25:(minC>=7?13:0); eC=d.cdnYears>=2?25:(d.cdnYears===1?13:0); }
+  if(eb===2){ eL=minC>=9?50:(minC>=7?25:0); eC=d.cdnYears>=2?50:(d.cdnYears===1?25:0); }
+  var fL=0,fC=0;
+  if(d.foreign===1){ fL=minC>=9?25:(minC>=7?13:0); fC=d.cdnYears>=2?25:(d.cdnYears===1?13:0); }
+  if(d.foreign===3){ fL=minC>=9?50:(minC>=7?25:0); fC=d.cdnYears>=2?50:(d.cdnYears===1?25:0); }
+  var tCoq=d.coq?(minC>=7?50:(minC>=5?25:0)):0;
+  r.trans=Math.min(100,Math.min(50,eL+eC)+Math.min(50,fL+fC)+tCoq);
+  var add=(d.sibling?15:0)+((d.french&&minF>=7)?(minC>=5?50:25):0)+(d.cdnEdu==="short"?15:(d.cdnEdu==="long"?30:0))+(d.pnp?600:0);
+  r.add=Math.min(600,add);
+  r.before=r.age+r.edu+r.lang1+r.lang2+r.cdn+r.spouse+r.trans+r.add;
+  var lvl=d.cdnNoc?d.cdnNoc.level:0;
+  r.bonusEligible=d.cdnYears>=1&&lvl>0&&d.cdnMonths>=12;
+  r.bonus=r.bonusEligible?BONUS[lvl]:0;
+  r.optA=r.cdn+r.bonus;
+  r.optB=(d.offer&&d.offerNoc&&d.offerNoc.level)?OFFER[d.offerNoc.level]:0;
+  r.lmi=Math.min(sp?140:150,Math.max(r.optA,r.optB));
+  r.usesOffer=r.optB>r.optA;
+  r.after=r.before-r.cdn+r.lmi;
+  return r;
+}
+
+/* ---------- Form ---------- */
+var f=document.getElementById("f"), res=document.getElementById("result");
+function val(n){ var el=f.elements[n]; return el?el.value:""; }
+function save(){ try{ var o={}; new FormData(f).forEach(function(v,k){o[k]=v;}); localStorage.setItem(KEY,JSON.stringify(o)); }catch(e){} }
+function clearStore(){ try{ localStorage.removeItem(KEY); }catch(e){} }
+function updateTest(){
+  var t=val("test");
+  ["sL","sR","sW","sS"].forEach(function(i){ var el=document.getElementById(i); el.placeholder=RANGE[t]; el.step=t==="ielts"?"0.5":"1"; });
+  var c=["S","L","R","W"].map(function(a){return toClb(t,a,document.getElementById("s"+a).value);});
+  var out=document.getElementById("clbOut");
+  if(c.every(function(x){return x!=null;})) out.textContent="CLB levels: Speaking "+c[0]+" · Listening "+c[1]+" · Reading "+c[2]+" · Writing "+c[3];
+  else out.textContent=t==="clb"?"Enter your CLB level for each skill.":"Enter your four scores to see your CLB levels.";
+}
+function badge(inputId,badgeId){
+  var info=nocInfo(document.getElementById(inputId).value), b=document.getElementById(badgeId);
+  if(!info){ b.innerHTML=""; return; }
+  b.innerHTML=lvlBadge(info.level)+'<b>'+info.code+'</b><span>'+(info.known?esc(info.title):"Not on the high-wage list")+'</span><span>TEER '+info.teer+(info.teer>=4?' · not skilled work for Express Entry':'')+'</span>';
+}
+function toggles(){
+  document.getElementById("frRow").hidden=val("french")!=="yes";
+  document.getElementById("offerNocField").hidden=val("offer")!=="yes";
+  document.getElementById("spouseSet").hidden=val("marital")!=="married_acc";
+}
+function read(){
+  var errs=[], t=val("test"), age=parseInt(val("age"),10);
+  if(isNaN(age)) errs.push("Enter your age.");
+  if(!val("edu")) errs.push("Choose your highest education.");
+  var clb=["L","R","W","S"].map(function(a){return toClb(t,a,document.getElementById("s"+a).value);});
+  if(clb.some(function(x){return x==null;})) errs.push("Enter all four English scores.");
+  var french=val("french")==="yes", nclc=[0,0,0,0];
+  if(french){ nclc=["fL","fR","fW","fS"].map(function(i){return parseInt(val(i),10);}); if(nclc.some(isNaN)) errs.push("Choose your NCLC level for all four French skills, or set French test to No."); }
+  var cdnYears=parseInt(val("cdnYears"),10)||0, cdnNoc=nocInfo(val("cdnNoc"));
+  if(val("cdnNoc")&&!cdnNoc) errs.push("The Canadian NOC code needs 5 digits.");
+  var cdnMonths=parseInt(val("cdnMonths"),10); if(isNaN(cdnMonths)) cdnMonths=cdnNoc?cdnYears*12:0;
+  var offer=val("offer")==="yes", offerNoc=nocInfo(val("offerNoc"));
+  if(offer&&!offerNoc) errs.push("Enter the 5-digit NOC code of your job offer.");
+  var spClb=["pL","pR","pW","pS"].map(function(i){var v=parseInt(val(i),10);return isNaN(v)?0:v;});
+  return {errs:errs,d:{age:age,marital:val("marital"),province:val("province"),status:val("status"),permitExpiry:val("permitExpiry"),inPool:val("inPool")==="yes",
+    edu:val("edu")||"none",cdnEdu:val("cdnEdu"),eca:val("eca"),test:t,testDate:val("testDate"),clb:clb.map(function(x){return x==null?0:x;}),french:french,nclc:nclc,
+    cdnYears:cdnYears,cdnNoc:cdnNoc,cdnMonths:cdnMonths,foreign:parseInt(val("foreign"),10)||0,coq:val("coq")==="yes",salary:parseFloat(val("salary"))||0,
+    offer:offer,offerNoc:offerNoc,sibling:val("sibling")==="yes",pnp:val("pnp")==="yes",spEdu:val("spEdu"),spCdn:parseInt(val("spCdn"),10)||0,spClb:spClb}};
+}
+
+/* ---------- Evaluation ---------- */
+var CEC=[["Jun 23",516],["Jul 7",517],["Jul 21",516],["Aug 5",516],["Aug 18",523],["Sep 1",521],["Sep 29",518]];
+var CUT_LO=516, CUT_HI=523;
+function monthsBetween(a,b){ return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+(b.getDate()>=a.getDate()?0:-1); }
+function fmtDate(dt){ return dt.toLocaleDateString("en-CA",{year:"numeric",month:"short",day:"numeric"}); }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function levers(d,r){
+  var out=[], base=r.after;
+  function tryIt(label,mut){ var x=clone(d); mut(x); var v=calc(x).after-base; if(v>0) out.push({label:label,pts:v}); }
+  if(d.cdnYears<5) tryIt("One more year of Canadian work ("+(d.cdnYears+1)+" total)",function(x){x.cdnYears++;x.cdnMonths+=12;});
+  if(r.minClb<9) tryIt("English at CLB 9 in all four skills",function(x){x.clb=x.clb.map(function(c){return Math.max(c,9);});});
+  if(d.clb.some(function(c){return c<10;})) tryIt("English at CLB 10 in all four skills",function(x){x.clb=[10,10,10,10];});
+  if(!d.french||Math.min.apply(null,d.nclc)<7) tryIt("French at NCLC 7 in all four skills",function(x){x.french=true;x.nclc=[7,7,7,7];});
+  if(!(d.offer&&d.offerNoc&&d.offerNoc.level)) [1,2,3].forEach(function(l){ tryIt("Genuine job offer in a Level "+l+" occupation",function(x){x.offer=true;x.offerNoc={level:l};}); });
+  if(!d.pnp) tryIt("Provincial nomination",function(x){x.pnp=true;});
+  return out.sort(function(a,b){return b.pts-a.pts;});
+}
+function evaluate(d,r){
+  var today=new Date(), todo=[], dont=[], checks=[];
+  var lvl=d.cdnNoc?d.cdnNoc.level:0, teer=d.cdnNoc?d.cdnNoc.teer:null;
+  var needClb=(teer!=null&&teer<=1)?7:5;
+  var cecOk=d.cdnYears>=1&&(teer==null||teer<=3)&&r.minClb>=needClb;
+  if(d.cdnYears<1) checks.push(["no","Canadian Experience Class: you need 12 months of skilled Canadian work in the last 3 years."]);
+  else if(teer!=null&&teer>3) checks.push(["no","Canadian Experience Class: TEER "+teer+" work isn't skilled work for Express Entry."]);
+  else if(r.minClb<needClb) checks.push(["no","Canadian Experience Class: you need CLB "+needClb+" in every skill for a TEER "+teer+" job."]);
+  else checks.push(["ok","Canadian Experience Class: you appear to meet the basic requirements (12+ months skilled Canadian work, CLB "+needClb+"+)."]);
+  if(d.cdnNoc){
+    if(lvl&&r.bonusEligible) checks.push(["ok","High-wage bonus: NOC "+d.cdnNoc.code+" is Level "+lvl+" and you have "+d.cdnMonths+" months in it. +"+BONUS[lvl]+" points."]);
+    else if(lvl) checks.push(["warn","High-wage bonus: NOC "+d.cdnNoc.code+" is Level "+lvl+", but you have "+d.cdnMonths+" of the 12 months needed."]);
+    else checks.push(["no","High-wage bonus: NOC "+d.cdnNoc.code+" is not on IRCC's high-wage list, so no bonus."]);
+  } else checks.push(["warn","High-wage bonus: enter your Canadian NOC code to check your level."]);
+  if(d.offer&&d.offerNoc){
+    if(d.offerNoc.level) checks.push([r.usesOffer?"ok":"warn","Job offer: Level "+d.offerNoc.level+" is worth "+OFFER[d.offerNoc.level]+" points"+(r.usesOffer?", more than your experience points, so it counts.":", which doesn't beat your experience points ("+r.optA+").")]);
+    else checks.push(["no","Job offer: NOC "+d.offerNoc.code+" isn't on the list, so it earns no points."]);
+  }
+  if(d.testDate){
+    var exp=new Date(d.testDate); exp.setFullYear(exp.getFullYear()+2); var left=monthsBetween(today,exp);
+    if(exp<today) checks.push(["no","Language test expired on "+fmtDate(exp)+". You need a valid test to enter or stay in the pool."]);
+    else if(left<6) checks.push(["warn","Language test expires on "+fmtDate(exp)+". It must be valid when you apply after an ITA."]);
+    else checks.push(["ok","Language test valid until "+fmtDate(exp)+"."]);
+  }
+  if(d.permitExpiry){
+    var pe=new Date(d.permitExpiry), pl=monthsBetween(today,pe);
+    if(pe<today) checks.push(["no","Your permit expiry date has passed. Check your status before anything else."]);
+    else if(pl<6) checks.push(["warn","Permit expires "+fmtDate(pe)+" ("+pl+" months). An ITA and PR application take time; plan for bridging options."]);
+    else checks.push(["ok","Permit valid until "+fmtDate(pe)+"."]);
+  }
+  if(d.province==="Quebec") checks.push(["warn","Quebec selects its own skilled workers. Express Entry applicants must plan to live outside Quebec."]);
+
+  if(!d.inPool&&cecOk) todo.push("Create your Express Entry profile now. Everyone in the pool is rescored automatically on November 3, so there's no reason to wait.");
+  if(!d.inPool&&!cecOk) todo.push("Check which Express Entry program you qualify for (CEC, Federal Skilled Worker or Trades) before creating a profile.");
+  if(d.inPool) todo.push("Log in and confirm your profile's NOC, work dates and hours match your reference letter before the November 3 rescoring.");
+  if(r.usesOffer) todo.push("Add your job offer details to your profile before November 3. IRCC says offer points need a profile update by then.");
+  if(lvl&&!r.bonusEligible&&d.cdnYears>=1){ var when=new Date(today); when.setMonth(when.getMonth()+Math.max(12-d.cdnMonths,0)); todo.push("Keep working in NOC "+d.cdnNoc.code+". You reach 12 months around "+fmtDate(when)+"; the +"+BONUS[lvl]+" bonus applies from then."); }
+  todo.push("Get an employer reference letter listing your actual duties, hours per week, start date and salary. Pick the NOC whose description and main duties match it.");
+  var lv=levers(d,r); if(lv.length) todo.push("Your biggest score lever: "+lv[0].label.toLowerCase()+" (+"+lv[0].pts+").");
+  if(r.after<CUT_LO&&!d.pnp) todo.push("Look at provincial programs. A nomination adds 600 points, and most provinces have streams for people already working there.");
+  if(d.province==="Ontario"&&d.salary>=80000) todo.push("Ontario's Workforce Priority Stream gives its top earnings points at $80,000+. Worth a profile alongside Express Entry.");
+  todo.push("Keep documents ready for the 60-day application window: passport, ECA, language results, reference letters, pay stubs, police certificates and proof of funds if required.");
+  todo.push("Expect draws to pause up to two weeks after November 3 while scores are recalculated.");
+
+  dont.push("Don't pick a NOC from your job title. The same title can sit in two NOCs; IRCC decides by your duties.");
+  if(d.cdnNoc&&!lvl) dont.push("Don't switch to a listed NOC unless your duties truly match it. Misrepresentation can bring a 5-year ban from applying.");
+  if(d.cdnEdu!=="none") dont.push("Don't count work done while you were a full-time student. It isn't Canadian experience.");
+  if(d.offer) dont.push("Don't add a job offer that isn't genuine, full-time and continuous for 1+ year after PR. Officers check the employer and your fit for the role.");
+  if(d.eca==="no"&&d.edu!=="none"&&d.cdnEdu==="none") dont.push("Don't claim foreign education points without an ECA. Order one before you enter the pool.");
+  dont.push("Don't let your language test or work permit expire while you wait for an invitation.");
+  dont.push("Don't treat extra points as a guaranteed invitation. Each draw sets its own cut-off, and everyone in a listed NOC gets the same boost.");
+  if(d.salary) dont.push("Don't expect a raise to change your level. The level comes from your NOC's national median wage, not your salary.");
+  return {checks:checks,todo:todo,dont:dont,levers:lv};
+}
+function render(d,r){
+  var e=evaluate(d,r), lvl=d.cdnNoc?d.cdnNoc.level:0, delta=r.after-r.before;
+  var verdict;
+  if(r.after>=CUT_HI+20) verdict="From November 3 you sit well above recent CEC cut-offs.";
+  else if(r.after>CUT_HI) verdict="From November 3 you're above recent CEC cut-offs, but the margin is narrow if cut-offs rise.";
+  else if(r.after>=CUT_LO) verdict="You're inside the range of recent CEC cut-offs. An invitation depends on the next draws.";
+  else verdict="You're below recent CEC cut-offs. Focus on the levers below.";
+  if(delta===0&&d.cdnNoc&&!lvl) verdict+=" Your score doesn't rise on November 3, while many others' will.";
+  var lo=Math.floor(Math.min(480,r.before-10,r.after-10)/10)*10, hi=Math.ceil(Math.max(600,r.after+15)/10)*10;
+  function pos(v){ return (Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*100; }
+  var nocLine=d.cdnNoc?'<div class="noc-badge" style="justify-content:center">'+lvlBadge(lvl)+'<b>NOC '+d.cdnNoc.code+'</b><span>'+(d.cdnNoc.known?esc(d.cdnNoc.title):"")+'</span><span>TEER '+d.cdnNoc.teer+'</span></div>':'<div class="noc-badge" style="justify-content:center">'+lvlBadge(0)+'<span>No Canadian NOC entered</span></div>';
+  var rows=[["Age",r.age,r.age],["Education",r.edu,r.edu],["English",r.lang1,r.lang1],["French",r.lang2,r.lang2]];
+  if(r.sp) rows.push(["Spouse factors",r.spouse,r.spouse]);
+  rows.push([r.usesOffer?"Canadian experience → job offer":"Canadian experience"+(r.bonus?" + high-wage bonus":""),r.cdn,r.lmi]);
+  rows.push(["Skill transferability",r.trans,r.trans]);
+  rows.push(["Additional",r.add,r.add]);
+  var tbody=rows.map(function(x){return '<tr><td>'+x[0]+'</td><td class="num">'+x[1]+'</td><td class="num"'+(x[2]!==x[1]?' style="font-weight:800;color:var(--red)"':'')+'>'+x[2]+'</td></tr>';}).join("");
+  function li(cls,sym,t){ return '<li><span class="mark '+cls+'" aria-hidden="true">'+sym+'</span><span>'+esc(t)+'</span></li>'; }
+  var checksHtml='<ul class="list">'+e.checks.map(function(c){return li(c[0],c[0]==="ok"?"✓":(c[0]==="no"?"✕":"!"),c[1]);}).join("")+'</ul>';
+  var todoHtml='<ul class="list">'+e.todo.map(function(t){return li("do","✓",t);}).join("")+'</ul>';
+  var dontHtml='<ul class="list">'+e.dont.map(function(t){return li("no","✕",t);}).join("")+'</ul>';
+  var levHtml=e.levers.length?'<ul class="levers">'+e.levers.map(function(l){return '<li><span>'+esc(l.label)+'</span><span class="plus">+'+l.pts+'</span></li>';}).join("")+'</ul>':'<p class="note">No further gains found from the common levers.</p>';
+  res.innerHTML=
+    '<div class="card">'+
+      '<p class="note" style="text-align:center" id="resTag">Assessment · '+(r.sp?"with spouse":"single")+'</p>'+nocLine+
+      '<div class="bubbles"><div class="bubble now"><span class="k">Today</span><span class="v">'+r.before+'</span><span class="d">current rules</span></div>'+
+      '<div class="bubble new"><span class="k">From Nov 3</span><span class="v">'+r.after+'</span><span class="d">'+(delta>0?"+"+delta+" points":"no change")+'</span></div></div>'+
+      '<p class="verdict">'+esc(verdict)+'</p>'+
+      '<div aria-label="Your scores against recent CEC cut-offs"><div class="track"><div class="band" style="left:'+pos(CUT_LO).toFixed(2)+'%;width:'+(pos(CUT_HI)-pos(CUT_LO)).toFixed(2)+'%"></div>'+
+        (r.before!==r.after?'<div class="pin" style="left:'+pos(r.before).toFixed(2)+'%"><span>'+r.before+'</span><i></i></div>':'')+
+        '<div class="pin new" style="left:'+pos(r.after).toFixed(2)+'%"><span>'+r.after+'</span><i></i></div></div>'+
+        '<div class="axis"><span>'+lo+'</span><span>Shaded: CEC cut-offs '+CUT_LO+'–'+CUT_HI+', Jun–Sep 2026</span><span>'+hi+'</span></div></div>'+
+    '</div>'+
+    '<div class="card"><h3>Score breakdown</h3><div class="tbl"><table class="breakdown"><thead><tr><th>Factor</th><th class="num">Today</th><th class="num">Nov 3</th></tr></thead><tbody>'+tbody+'</tbody><tfoot><tr><td>Total</td><td class="num">'+r.before+'</td><td class="num">'+r.after+'</td></tr></tfoot></table></div>'+
+      '<p class="info">CLB used: L '+d.clb[0]+' · R '+d.clb[1]+' · W '+d.clb[2]+' · S '+d.clb[3]+'. Experience option (duration + bonus) = '+r.optA+'; job offer option = '+r.optB+'.</p></div>'+
+    '<div class="card"><h3>Checks</h3>'+checksHtml+'</div>'+
+    '<div class="card"><h3>What would add points</h3>'+levHtml+'<p class="note">Each line is measured on its own against your November 3 score.</p></div>'+
+    '<div class="card"><h3>What to do</h3>'+todoHtml+'</div>'+
+    '<div class="card"><h3>What to avoid</h3>'+dontHtml+'</div>';
+}
+function run(scroll){
+  var x=read(), box=document.getElementById("errors");
+  if(x.errs.length){ box.hidden=false; box.innerHTML='<b>Fix these to see your score:</b><ul>'+x.errs.map(function(s){return '<li>'+esc(s)+'</li>';}).join("")+'</ul>'; if(scroll) box.scrollIntoView({behavior:"smooth",block:"center"}); return false; }
+  box.hidden=true; render(x.d,calc(x.d));
+  if(scroll&&window.matchMedia("(max-width:980px)").matches) res.scrollIntoView({behavior:"smooth",block:"start"});
+  return true;
+}
+var evaluated=false;
+f.addEventListener("submit",function(e){ e.preventDefault(); evaluated=run(true)||evaluated; });
+f.addEventListener("input",onChange); f.addEventListener("change",onChange);
+function refreshUi(){ toggles(); updateTest(); badge("cdnNoc","cdnNocBadge"); badge("offerNoc","offerNocBadge"); }
+function onChange(){ refreshUi(); save(); if(evaluated) run(false); }
+
+var EMPTY=res.innerHTML;
+function bindExample(){ var b=document.getElementById("example2"); if(b) b.addEventListener("click",loadExample); }
+function resetAll(){ f.reset(); clearStore(); evaluated=false; document.getElementById("errors").hidden=true; res.innerHTML=EMPTY; bindExample(); refreshUi(); }
+document.getElementById("clear").addEventListener("click",resetAll);
+function setVal(id,v){ var el=document.getElementById(id); if(el) el.value=v; }
+function check(id){ var el=document.getElementById(id); if(el) el.checked=true; }
+function loadExample(){
+  f.reset();
+  setVal("age",27); setVal("marital","single"); setVal("province","Ontario"); setVal("status","pgwp");
+  setVal("edu","multi"); setVal("cdnEdu","short"); check("eca-yes"); check("test-pte");
+  setVal("sS",90); setVal("sL",90); setVal("sR",80); setVal("sW",90);
+  var t=new Date(); t.setMonth(t.getMonth()-8); setVal("testDate",t.toISOString().slice(0,10));
+  setVal("cdnYears","1"); setVal("foreign","1"); setVal("cdnNoc","21222 Information systems specialists"); setVal("cdnMonths",17);
+  check("sibling-yes"); check("inPool-no");
+  onChange(); evaluated=run(false);
+  var tag=document.getElementById("resTag"); if(tag) tag.textContent+=" · example profile, replace with your details";
+}
+document.getElementById("example").addEventListener("click",loadExample);
+bindExample();
+
+/* Fresh start on every load: wipe stored answers and any browser-restored values */
+clearStore();
+window.addEventListener("pageshow",function(){ f.reset(); clearStore(); refreshUi(); });
+f.reset(); refreshUi();
+var h=(location.hash||"").replace("#",""); showTab(TABS.indexOf(h)>-1?h:"calc");
+})();
+</script>
+
+</body></html>
